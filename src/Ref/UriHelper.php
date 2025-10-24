@@ -39,7 +39,7 @@ final class UriHelper
      *
      * @return array{0:string,1:string} [resolvedTargetUri, pointerWithoutHash]
      */
-    private static function splitRef(string $baseUri, string $ref): array
+    public static function splitRef(string $baseUri, string $ref): array
     {
         // Разделяем на "pathPart" и "fragment"
         $hashPos = strpos($ref, '#');
