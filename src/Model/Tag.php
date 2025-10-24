@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace On1kel\OAS\Core\Model;
 
 use On1kel\OAS\Core\Contract\Common\Extensible;
+use On1kel\OAS\Core\Model\Enum\TagKind;
 use On1kel\OAS\Core\Model\Support\HasExtensions;
 
 /**
@@ -21,13 +22,13 @@ final class Tag implements Extensible
     use HasExtensions;
 
     /**
-     * @param string                     $name         REQUIRED (3.1/3.2).
-     * @param string|null                $summary      (3.2) Короткий заголовок/лейбл тега.
-     * @param string|null                $description  CommonMark.
+     * @param string $name REQUIRED (3.1/3.2).
+     * @param string|null $summary (3.2) Короткий заголовок/лейбл тега.
+     * @param string|null $description CommonMark.
      * @param ExternalDocumentation|null $externalDocs Доп. документация.
-     * @param string|null                $parent       (3.2) Имя родительского тега (должен существовать в описании).
-     * @param string|null                $kind         (3.2) Машиночитаемая категория тега (например: "nav", "badge", "audience").
-     * @param array<string,mixed>        $extensions   x-* расширения.
+     * @param string|null $parent (3.2) Имя родительского тега (должен существовать в описании).
+     * @param TagKind|null $kind (3.2) Машиночитаемая категория тега (например: "nav", "badge", "audience").
+     * @param array<string,mixed> $extensions x-* расширения.
      */
     public function __construct(
         public readonly string $name,
@@ -35,7 +36,7 @@ final class Tag implements Extensible
         public readonly ?string $description = null,
         public readonly ?ExternalDocumentation $externalDocs = null,
         public readonly ?string $parent = null,
-        public readonly ?string $kind = null,
+        public readonly ?TagKind $kind = null,
         public readonly array $extensions = [],
     ) {
         if ($this->name === '') {
