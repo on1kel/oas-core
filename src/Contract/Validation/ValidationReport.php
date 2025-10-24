@@ -10,7 +10,7 @@ use function count;
 
 use Countable;
 use IteratorAggregate;
-use Severity;
+use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 use Traversable;
 
 /**

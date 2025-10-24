@@ -22,6 +22,53 @@ final class UriHelper
         return $targetUri . '#' . $pointer;
     }
 
+    /**
+     * Разбивает $ref на абсолютный URI целевого документа и JSON Pointer.
+     *
+     * Примеры:
+     *  baseUri="http://host/root.json", ref="#/Foo"
+     *    → ["http://host/root.json", "/Foo"]
+     *
+     *  baseUri="http://host/root.json", ref="models/user.json#/User"
+     *    → ["http://host/models/user.json", "/User"]
+     *
+     *  baseUri="file:///var/spec/root.json", ref="../common.json#/X"
+     *    → ["file:///var/common.json", "/X"]
+     *
+     * Если во входном ref нет '#', pointer = "" (пустая строка).
+     *
+     * @return array{0:string,1:string} [resolvedTargetUri, pointerWithoutHash]
+     */
+    private static function splitRef(string $baseUri, string $ref): array
+    {
+        // Разделяем на "pathPart" и "fragment"
+        $hashPos = strpos($ref, '#');
+        $pathPart = $hashPos === false ? $ref : substr($ref, 0, $hashPos);
+        $rawFragment = $hashPos === false ? '' : substr($ref, $hashPos + 1); // без '#'
+
+        // Абсолютный URI целевого документа:
+        // Если pathPart пустой -> это локальная ссылка типа "#/components/..." -> просто baseUri
+        if ($pathPart === '') {
+            $resolvedUri = $baseUri;
+        } else {
+            $resolvedUri = self::resolveRelative($baseUri, $pathPart);
+            // resolveRelative может вернуть что-то с фрагментом, а нам нужно тело документа без фрагмента.
+            // Поэтому отрезаем кусок после '#', если он внезапно есть.
+            $againHashPos = strpos($resolvedUri, '#');
+            if ($againHashPos !== false) {
+                $resolvedUri = substr($resolvedUri, 0, $againHashPos);
+            }
+        }
+
+        // pointer — это JSON Pointer в формате RFC6901.
+        // Если фрагмент пустой -> pointer пустой.
+        // Если фрагмент не начинается с '/', мы всё равно возвращаем как есть.
+        // (валидация делается в другом месте)
+        $pointer = $rawFragment;
+
+        return [$resolvedUri, $pointer];
+    }
+
     public static function resolveRelative(string $baseUri, string $ref): string
     {
         $hashPos  = strpos($ref, '#');

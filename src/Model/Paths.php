@@ -17,8 +17,8 @@ final class Paths implements Extensible
     use HasExtensions;
 
     /**
-     * @param \On1kel\OAS\Model\Collections\Map\PathItemMap $items      Карта путей
-     * @param array<string,mixed>                           $extensions Specification Extensions (x-*)
+     * @param PathItemMap $items Карта путей
+     * @param array<string,mixed> $extensions Specification Extensions (x-*)
      */
     public function __construct(
         public readonly PathItemMap $items,
