@@ -8,7 +8,7 @@ use On1kel\OAS\Core\Contract\Validation\NodeValidator;
 use On1kel\OAS\Core\Contract\Validation\ValidationContext;
 use On1kel\OAS\Core\Contract\Validation\ValidationError;
 use On1kel\OAS\Core\Model\Parameter;
-use Severity;
+use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 
 final class PathParameterRequiredRule implements NodeValidator
 {

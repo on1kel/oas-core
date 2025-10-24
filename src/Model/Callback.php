@@ -22,8 +22,8 @@ final class Callback implements Extensible
     use HasExtensions;
 
     /**
-     * @param \On1kel\OAS\Model\Collections\Map\CallbackMap|null $expressionMap Карта runtime-выражений → PathItem|Reference.
-     * @param array<string,mixed>                                $extensions    Расширения (x-*).
+     * @param CallbackMap|null $expressionMap Карта runtime-выражений → PathItem|Reference.
+     * @param array<string,mixed> $extensions Расширения (x-*).
      */
     public function __construct(
         public readonly ?CallbackMap $expressionMap = null,
