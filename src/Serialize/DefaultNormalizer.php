@@ -95,7 +95,7 @@ final class DefaultNormalizer implements Normalizer
 
     private function isMap(object $obj): bool
     {
-        return $obj instanceof \Traversable && method_exists($obj, 'isMap') && $obj->isMap();
+        return $obj instanceof \Traversable && method_exists($obj, 'isMap') && $obj->isMap(true);
     }
 
     private function normalizeValue(mixed $value, SpecProfile $profile): mixed
