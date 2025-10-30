@@ -15,9 +15,9 @@ final class DefaultNormalizer implements Normalizer
 
     /**
      * @param list<string> $modelNamespaces Список неймспейсов моделей, которые считаем "своими"
-     *                                      (например, ["On1kel\\OAS\\Model\\"])
+     *                                      (например, ["On1kel\\OAS\\Core\\Model\\"])
      */
-    public function __construct(array $modelNamespaces = ['On1kel\\OAS\\Model\\'])
+    public function __construct(array $modelNamespaces = ['On1kel\\OAS\\Core\\Model\\'])
     {
         $this->modelNamespaces = $modelNamespaces;
     }

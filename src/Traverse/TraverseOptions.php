@@ -18,7 +18,7 @@ final class TraverseOptions
     public function __construct(
         public readonly ?int $maxDepth = null,
         public readonly bool $visitReferences = true,
-        public readonly string $modelNamespace = 'On1kel\\OAS\\Model\\',
+        public readonly string $modelNamespace = 'On1kel\\OAS\\Core\\Model\\',
         public readonly bool $skipExtensions = true,
     ) {
         if ($this->maxDepth !== null && $this->maxDepth < 0) {
