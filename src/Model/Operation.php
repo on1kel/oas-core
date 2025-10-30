@@ -23,7 +23,7 @@ final class Operation implements Extensible
     use HasExtensions;
 
     /**
-     * @param TagList|null $tags
+     * @param list<string>|null $tags
      * @param string|null $summary
      * @param string|null $description
      * @param ExternalDocumentation|null $externalDocs
@@ -38,7 +38,7 @@ final class Operation implements Extensible
      * @param array<string,mixed> $extensions
      */
     public function __construct(
-        public readonly ?TagList $tags,
+        public readonly ?array $tags,
         public readonly ?string $summary,
         public readonly ?string $description,
         public readonly ?ExternalDocumentation $externalDocs,
