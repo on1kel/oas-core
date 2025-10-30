@@ -201,6 +201,11 @@ final class DefaultNormalizer implements NormalizerContract
             unset($node['extraKeywords']);
         }
 
+        if (array_key_exists('ref', $node) && is_string($node['ref'])) {
+            $node['$ref'] = $node['ref'];
+            unset($node['ref']);
+        }
+
         // 1) Контейнер с items (и только служебные поля помимо items) → схлопываем до items
         if (array_key_exists('items', $node)) {
             $other   = array_diff(array_keys($node), ['items']);
