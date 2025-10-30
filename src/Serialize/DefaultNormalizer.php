@@ -190,9 +190,20 @@ final class DefaultNormalizer implements NormalizerContract
      */
     private function postProcessNode(array $node, string $ptr): array
     {
+        // 0) extraKeywords → разворачиваем в корень узла
+        if (array_key_exists('extraKeywords', $node) && is_array($node['extraKeywords'])) {
+            // не затираем уже существующие ключи узла
+            foreach ($node['extraKeywords'] as $k => $v) {
+                if (!array_key_exists($k, $node)) {
+                    $node[$k] = $v;
+                }
+            }
+            unset($node['extraKeywords']);
+        }
+
         // 1) Контейнер с items (и только служебные поля помимо items) → схлопываем до items
         if (array_key_exists('items', $node)) {
-            $other = array_diff(array_keys($node), ['items']);
+            $other   = array_diff(array_keys($node), ['items']);
             $allMeta = true;
             foreach ($other as $k) {
                 if (!in_array($k, self::META_KEYS, true)) {
@@ -201,7 +212,6 @@ final class DefaultNormalizer implements NormalizerContract
                 }
             }
             if ($allMeta) {
-                // если items — именно список, прогоняем ещё через пост-обработку списков
                 if (is_array($node['items']) && array_is_list($node['items'])) {
                     /** @var list<mixed> $list */
                     $list = $node['items'];
@@ -209,7 +219,6 @@ final class DefaultNormalizer implements NormalizerContract
                     $processed = $this->postProcessList($list, $ptr);
                     return $processed;
                 }
-                // иначе просто возвращаем содержимое items
                 return is_array($node['items']) ? $node['items'] : $node;
             }
         }
@@ -236,6 +245,7 @@ final class DefaultNormalizer implements NormalizerContract
 
         return $node;
     }
+
 
     /**
      * @param list<mixed> $list
