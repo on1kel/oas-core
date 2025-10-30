@@ -68,11 +68,6 @@ final class Operation implements Extensible
         return ($this->callbacks?->count() ?? 0) > 0;
     }
 
-    public function hasTags(): bool
-    {
-        return $this->tags?->hasAny() ?? false;
-    }
-
     /**
      * {@inheritDoc}
      */
