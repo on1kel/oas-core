@@ -67,42 +67,84 @@ final class DefaultSerializer implements SerializerContract
     }
 
     /**
-     * Рекурсивно удаляет пустые значения:
-     *  - null
-     *  - пустые массивы []
+     * Рекурсивная чистка пустот с учётом OpenAPI security:
+     *  - поднимает узлы-обёртки { requirements: {...}, ...пустое } → в {...}
+     *  - НЕ удаляет пустые [] у скоупов security-схем (значимо!)
+     *  - удаляет null и пустые [] в остальных местах
      *
-     * Сохраняем 0, '0', false.
-     * Можно принудительно сохранить пустое значение для конкретного ключа
-     * через флаг extra: 'preserveEmpty.<key>' = true/1.
-     *
-     * @param  mixed $value
+     * @param  mixed             $value
+     * @param  SpecProfile       $profile
+     * @param  array<int,string> $path
+     * @param  bool              $preserveScopes Контекст: находимся внутри карты скоупов security-схем
      * @return mixed
      */
-    private function pruneEmpty(mixed $value, SpecProfile $profile, array $path = [])
+    private function pruneEmpty(mixed $value, SpecProfile $profile, array $path = [], bool $preserveScopes = false)
     {
         if (!is_array($value)) {
             return $value;
         }
 
+        // ── 0) Универсально раскрываем "requirements" на уровень выше
+        //     Только если остальные поля отсутствуют/пустые (null | [])
+        $isAssoc = !array_is_list($value);
+        if ($isAssoc && array_key_exists('requirements', $value) && is_array($value['requirements'])) {
+            $other = array_diff(array_keys($value), ['requirements']);
+            $othersAllEmpty = true;
+            foreach ($other as $k) {
+                $v = $value[$k] ?? null;
+                if ($v !== null && (!is_array($v) || $v !== [])) {
+                    $othersAllEmpty = false;
+                    break;
+                }
+            }
+            if ($other === [] || $othersAllEmpty) {
+                // Переходим в режим "карта скоупов": пустые [] теперь значимы
+                return $this->pruneEmpty($value['requirements'], $profile, $path, true);
+            }
+        }
+
         $result = [];
+        $parentIsList = array_is_list($value);
+
         foreach ($value as $key => $v) {
             $keyStr = (string)$key;
             $currentPath = [...$path, $keyStr];
 
-            $v = is_array($v) ? $this->pruneEmpty($v, $profile, $currentPath) : $v;
+            if (is_array($v)) {
+                // Наследуем контекст preserveScopes внутрь
+                $v = $this->pruneEmpty($v, $profile, $currentPath, $preserveScopes);
+            }
 
-            // индивидуальный скалярный флаг: preserveEmpty.<key>
+            // Явная защита по флагу профиля
             $preserveFlagName = 'preserveEmpty.' . $keyStr;
-            $preserve = (bool) $profile->features()->extraFlag($preserveFlagName, false);
-
-            if ($preserve) {
+            if ($profile->features()->extraFlag($preserveFlagName, false)) {
                 $result[$key] = $v;
                 continue;
             }
 
-            $isEmptyArray = is_array($v) && $v === [];
-            if ($v === null || $isEmptyArray) {
-                continue; // вычищаем пустоту
+            // Удаляем null
+            if ($v === null) {
+                continue;
+            }
+
+            // Пустой массив: решаем по контексту
+            if (is_array($v) && $v === []) {
+                // 1) Если мы внутри списка — это мусор (кроме режима скоупов)
+                if ($parentIsList && !$preserveScopes) {
+                    continue;
+                }
+
+                // 2) Если мы в контексте скоупов (или явно под security/requirements) — сохраняем
+                $underRequirements = in_array('requirements', $path, true);
+                $underSecurity     = in_array('security', $path, true);
+
+                if ($preserveScopes || $underRequirements || $underSecurity) {
+                    $result[$key] = $v; // [] значим как "нет требуемых скоупов"
+                    continue;
+                }
+
+                // 3) Иначе — чистим пустые [] внутри объектов
+                continue;
             }
 
             $result[$key] = $v;
@@ -110,4 +152,5 @@ final class DefaultSerializer implements SerializerContract
 
         return $result;
     }
+
 }

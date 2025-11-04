@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace On1kel\OAS\Core\Validation\Rule;
 
+use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 use On1kel\OAS\Core\Contract\Validation\NodeValidator;
 use On1kel\OAS\Core\Contract\Validation\ValidationContext;
 use On1kel\OAS\Core\Contract\Validation\ValidationError;
 use On1kel\OAS\Core\Model\Operation;
-use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 
 final class UniqueOperationIdRule implements NodeValidator
 {
@@ -16,9 +16,9 @@ final class UniqueOperationIdRule implements NodeValidator
     private array $seen = [];
 
     /**
-     * @param string $path
-     * @param object $node
-     * @param ValidationContext $ctx
+     * @param  string                                           $path
+     * @param  object                                           $node
+     * @param  ValidationContext                                $ctx
      * @return array<string, ValidationError>|ValidationError[]
      */
     public function validate(string $path, object $node, ValidationContext $ctx): array

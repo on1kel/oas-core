@@ -20,18 +20,18 @@ final class OpenApiDocument implements Extensible
     use HasExtensions;
 
     /**
-     * @param string $openapi Версия OAS, например "3.1.0" или "3.2.0"
-     * @param Info $info Блок информации
-     * @param string|null $jsonSchemaDialect Диалект JSON Schema (3.1+)
-     * @param string|null $self канонический URI самого документа. База для разрешения относительных ссылок внутри описания
-     * @param Paths|null $paths Карта путей
-     * @param WebhookMap|null $webhooks Карта вебхуков (3.1+)
-     * @param Components|null $components Именованные компоненты
-     * @param ServerList|null $servers Список серверов
-     * @param SecurityRequirementList|null $security Требования безопасности (массив карт)
-     * @param TagList|null $tags Теги
-     * @param ExternalDocumentation|null $externalDocs Внешняя документация
-     * @param array<string,mixed> $extensions x-расширения на корневом уровне
+     * @param string                       $openapi           Версия OAS, например "3.1.0" или "3.2.0"
+     * @param Info                         $info              Блок информации
+     * @param string|null                  $jsonSchemaDialect Диалект JSON Schema (3.1+)
+     * @param string|null                  $self              канонический URI самого документа. База для разрешения относительных ссылок внутри описания
+     * @param Paths|null                   $paths             Карта путей
+     * @param WebhookMap|null              $webhooks          Карта вебхуков (3.1+)
+     * @param Components|null              $components        Именованные компоненты
+     * @param ServerList|null              $servers           Список серверов
+     * @param SecurityRequirementList|null $security          Требования безопасности (массив карт)
+     * @param TagList|null                 $tags              Теги
+     * @param ExternalDocumentation|null   $externalDocs      Внешняя документация
+     * @param array<string,mixed>          $extensions        x-расширения на корневом уровне
      */
     public function __construct(
         public readonly string $openapi,

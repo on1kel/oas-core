@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace On1kel\OAS\Core\Validation\Rule;
 
+use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 use On1kel\OAS\Core\Contract\Validation\NodeValidator;
 use On1kel\OAS\Core\Contract\Validation\ValidationContext;
 use On1kel\OAS\Core\Contract\Validation\ValidationError;
 use On1kel\OAS\Core\Model\Info;
-use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 
 final class InfoRequiredFieldsRule implements NodeValidator
 {

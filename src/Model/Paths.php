@@ -17,7 +17,7 @@ final class Paths implements Extensible
     use HasExtensions;
 
     /**
-     * @param PathItemMap $items Карта путей
+     * @param PathItemMap         $items      Карта путей
      * @param array<string,mixed> $extensions Specification Extensions (x-*)
      */
     public function __construct(

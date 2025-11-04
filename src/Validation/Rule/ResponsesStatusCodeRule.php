@@ -8,16 +8,15 @@ use On1kel\OAS\Core\Contract\Validation\Enum\Severity;
 use On1kel\OAS\Core\Contract\Validation\NodeValidator;
 use On1kel\OAS\Core\Contract\Validation\ValidationContext;
 use On1kel\OAS\Core\Contract\Validation\ValidationError;
-use On1kel\OAS\Core\Model\Operation;
-use On1kel\OAS\Core\Model\Responses;
 use On1kel\OAS\Core\Model\Collections\Map\ResponseMap;
+use On1kel\OAS\Core\Model\Operation;
 
 final class ResponsesStatusCodeRule implements NodeValidator
 {
     /**
-     * @param string $path
-     * @param object $node
-     * @param ValidationContext $ctx
+     * @param  string                $path
+     * @param  object                $node
+     * @param  ValidationContext     $ctx
      * @return list<ValidationError>
      */
     public function validate(string $path, object $node, ValidationContext $ctx): array

@@ -8,7 +8,6 @@ use On1kel\OAS\Core\Contract\Common\Extensible;
 use On1kel\OAS\Core\Model\Collections\List\ParameterList;
 use On1kel\OAS\Core\Model\Collections\List\SecurityRequirementList;
 use On1kel\OAS\Core\Model\Collections\List\ServerList;
-use On1kel\OAS\Core\Model\Collections\List\TagList;
 use On1kel\OAS\Core\Model\Collections\Map\CallbackMap;
 use On1kel\OAS\Core\Model\Support\HasExtensions;
 
@@ -23,19 +22,19 @@ final class Operation implements Extensible
     use HasExtensions;
 
     /**
-     * @param list<string>|null $tags
-     * @param string|null $summary
-     * @param string|null $description
-     * @param ExternalDocumentation|null $externalDocs
-     * @param string|null $operationId
-     * @param ParameterList|null $parameters
-     * @param RequestBody|Reference|null $requestBody
-     * @param Responses $responses
-     * @param CallbackMap|null $callbacks
-     * @param bool $deprecated
+     * @param list<string>|null            $tags
+     * @param string|null                  $summary
+     * @param string|null                  $description
+     * @param ExternalDocumentation|null   $externalDocs
+     * @param string|null                  $operationId
+     * @param ParameterList|null           $parameters
+     * @param RequestBody|Reference|null   $requestBody
+     * @param Responses                    $responses
+     * @param CallbackMap|null             $callbacks
+     * @param bool                         $deprecated
      * @param SecurityRequirementList|null $security
-     * @param ServerList|null $servers
-     * @param array<string,mixed> $extensions
+     * @param ServerList|null              $servers
+     * @param array<string,mixed>          $extensions
      */
     public function __construct(
         public readonly ?array $tags,

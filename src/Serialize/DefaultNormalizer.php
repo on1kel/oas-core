@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace On1kel\OAS\Core\Serialize;
 
-use On1kel\OAS\Core\Contract\Profile\SpecProfile;
-use On1kel\OAS\Core\Contract\Serialize\Normalizer as NormalizerContract;
-use ReflectionClass;
-use ReflectionProperty;
-use Traversable;
-
 use function array_diff;
 use function array_is_list;
 use function array_key_exists;
@@ -17,7 +11,15 @@ use function in_array;
 use function is_array;
 use function is_object;
 use function is_scalar;
+
+use On1kel\OAS\Core\Contract\Profile\SpecProfile;
+use On1kel\OAS\Core\Contract\Serialize\Normalizer as NormalizerContract;
+use ReflectionClass;
+use ReflectionProperty;
+
 use function str_starts_with;
+
+use Traversable;
 
 final class DefaultNormalizer implements NormalizerContract
 {
@@ -66,6 +68,7 @@ final class DefaultNormalizer implements NormalizerContract
             foreach ($value as $k => $v) {
                 $out[$k] = $this->normalizeValue($v, $profile, $this->childPtr($ptr, (string)$k));
             }
+
             return $this->postProcessNode($out, $ptr);
         }
 
@@ -74,6 +77,7 @@ final class DefaultNormalizer implements NormalizerContract
             foreach ($value as $k => $v) {
                 $tmp[$k] = $this->normalizeValue($v, $profile, $this->childPtr($ptr, (string)$k));
             }
+
             return $this->postProcessNode($tmp, $ptr);
         }
 
@@ -86,8 +90,10 @@ final class DefaultNormalizer implements NormalizerContract
                 if ($ref->hasProperty('value')) {
                     $p = $ref->getProperty('value');
                     $p->setAccessible(true);
+
                     return $p->getValue($value);
                 }
+
                 return method_exists($value, '__toString') ? (string)$value : null;
             }
 
@@ -111,6 +117,7 @@ final class DefaultNormalizer implements NormalizerContract
     }
 
     /** @return array<string,mixed> */
+    /** @return array<string,mixed> */
     private function normalizeObject(object $obj, SpecProfile $profile, string $ptr): array
     {
         $ref = new ReflectionClass($obj);
@@ -128,8 +135,79 @@ final class DefaultNormalizer implements NormalizerContract
             $out[$name] = $this->normalizeValue($value, $profile, $childPtr);
         }
 
-        // Универсальная пост-обработка узла
-        return $this->postProcessNode($out, $ptr);
+        // Пост-обработка узла
+        $out = $this->postProcessNode($out, $ptr);
+
+        // Фильтрация ключей согласно профилю (ВАЖНО для 3.1 vs 3.2)
+        $nodeType = $ref->getShortName(); // напр., "SecurityScheme", "Info", "Schema", ...
+        $out = $this->filterAllowedKeys($out, $profile, $nodeType);
+
+        return $out;
+    }
+
+    /**
+     * Удаляет ключи, не разрешённые профилем для данного типа узла.
+     * Поддерживает 'x-*' расширения, спец-правила для Responses и Paths.
+     *
+     * @param  array<string|int,mixed> $node
+     * @return array<string,mixed>
+     */
+    private function filterAllowedKeys(array $node, SpecProfile $profile, string $nodeType): array
+    {
+        $allowed = $profile->allowedKeysFor($nodeType);
+        if ($allowed === []) {
+            return $node;
+        }
+
+        $allowExtensions = in_array('x-', $allowed, true);
+
+        // ── Спец-случай: Paths — карта path-templates. Сохраняем ключи, начинающиеся с '/', и 'x-*'
+        if ($nodeType === 'Paths') {
+            $result = [];
+            foreach ($node as $k => $v) {
+                $kStr = (string) $k;
+                if ($kStr !== '' && $kStr[0] === '/') {
+                    $result[$kStr] = $v;
+                    continue;
+                }
+                if ($allowExtensions && str_starts_with($kStr, 'x-')) {
+                    $result[$kStr] = $v;
+                }
+                // всё остальное отбрасываем
+            }
+
+            return $result;
+        }
+
+        $result = [];
+        foreach ($node as $k => $v) {
+            $kStr = (string) $k;
+
+            // ── Спец-случай: Responses допускает коды и 'default'
+            if ($nodeType === 'Responses') {
+                if (preg_match('/^[1-5][0-9]{2}$/', $kStr) === 1   // 100..599
+                    || preg_match('/^[1-5]XX$/', $kStr) === 1      // 1XX..5XX
+                    || $kStr === 'default') {
+                    $result[$kStr] = $v;
+                    continue;
+                }
+            }
+
+            // Точное совпадение с разрешёнными ключами профиля
+            if (in_array($kStr, $allowed, true)) {
+                $result[$kStr] = $v;
+                continue;
+            }
+
+            // Расширения 'x-*'
+            if ($allowExtensions && str_starts_with($kStr, 'x-')) {
+                $result[$kStr] = $v;
+                continue;
+            }
+            // иначе — отбрасываем
+        }
+
+        return $result;
     }
 
     /** @return list<mixed> */
@@ -173,26 +251,23 @@ final class DefaultNormalizer implements NormalizerContract
                 $out[(string)$k] = $this->normalizeValue($v, $profile, $this->childPtr($ptr, (string)$k));
             }
         }
+
         return $out;
     }
 
     private function childPtr(string $parent, string $segment): string
     {
         $seg = str_replace(['~', '/'], ['~0', '~1'], $segment);
+
         return $parent === '#' ? "#/{$seg}" : "{$parent}/{$seg}";
     }
 
     // ───────────────────── Универсальная пост-обработка узлов ─────────────────────
 
-    /**
-     * @param array<string,mixed> $node
-     * @return array<string,mixed>
-     */
     private function postProcessNode(array $node, string $ptr): array
     {
         // 0) extraKeywords → разворачиваем в корень узла
         if (array_key_exists('extraKeywords', $node) && is_array($node['extraKeywords'])) {
-            // не затираем уже существующие ключи узла
             foreach ($node['extraKeywords'] as $k => $v) {
                 if (!array_key_exists($k, $node)) {
                     $node[$k] = $v;
@@ -208,7 +283,7 @@ final class DefaultNormalizer implements NormalizerContract
 
         // 1) Контейнер с items (и только служебные поля помимо items) → схлопываем до items
         if (array_key_exists('items', $node)) {
-            $other   = array_diff(array_keys($node), ['items']);
+            $other = array_diff(array_keys($node), ['items']);
             $allMeta = true;
             foreach ($other as $k) {
                 if (!in_array($k, self::META_KEYS, true)) {
@@ -218,28 +293,24 @@ final class DefaultNormalizer implements NormalizerContract
             }
             if ($allMeta) {
                 if (is_array($node['items']) && array_is_list($node['items'])) {
-                    /** @var list<mixed> $list */
-                    $list = $node['items'];
-                    /** @var list<mixed> $processed */
-                    $processed = $this->postProcessList($list, $ptr);
+                    $processed = $this->postProcessList($node['items'], $ptr);
+
                     return $processed;
                 }
+
                 return is_array($node['items']) ? $node['items'] : $node;
             }
         }
 
-        // 2) «responses»-образные обёртки: сливаем карту кодов в уровень выше
+        // 2) responses-обёртка → твоя логика
         if (array_key_exists('responses', $node) && is_array($node['responses'])) {
             $allowedOthers = ['default', 'extensions'];
             $other = array_diff(array_keys($node), ['responses', ...$allowedOthers]);
-
             if ($other === []) {
                 $merged = [];
-
                 if (array_key_exists('default', $node) && $node['default'] !== null) {
                     $merged['default'] = $node['default'];
                 }
-
                 foreach ($node['responses'] as $code => $resp) {
                     $merged[(string)$code] = $resp;
                 }
@@ -253,7 +324,7 @@ final class DefaultNormalizer implements NormalizerContract
 
 
     /**
-     * @param list<mixed> $list
+     * @param  list<mixed> $list
      * @return list<mixed>
      */
     private function postProcessList(array $list, string $ptr): array
@@ -289,6 +360,7 @@ final class DefaultNormalizer implements NormalizerContract
                 /** @var array{string: mixed} $item */
                 $out[] = $item[$unwrapKey];
             }
+
             return $out;
         }
 

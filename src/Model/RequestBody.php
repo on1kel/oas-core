@@ -21,9 +21,9 @@ final class RequestBody implements Extensible
     use HasExtensions;
 
     /**
-     * @param string|null $description
-     * @param MediaTypeMap $content Обязательная карта mime-типов -> MediaType (НЕ может быть пустой).
-     * @param bool $required
+     * @param string|null         $description
+     * @param MediaTypeMap        $content     Обязательная карта mime-типов -> MediaType (НЕ может быть пустой).
+     * @param bool                $required
      * @param array<string,mixed> $extensions
      */
     public function __construct(
